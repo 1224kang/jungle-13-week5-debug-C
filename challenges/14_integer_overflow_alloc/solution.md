@@ -188,10 +188,22 @@ img->px[img->nbytes - 1] = 0xFF;  // 마지막 페이지 접근 → 4KB 더 할�
 
 <br/><br/>
 
-## 남은 개선점 (선택)
+## 추가 개선
+기존에는 `MAX` 값을 넘어서면 바로 종료시켰었는데 그러지 않고, `INT_32MAX` 기준으로 `INT_32MAX`보다 커지기 전까지만 image_fill을 실행시키도록 코드를 수정해봤다. 
 
-핵심 취약점은 해결됐지만, 견고함을 위해 추가하면 좋은 것들:
+이렇게 되면 total 값 자체는 size_t로 했기때문에 malloc 자체는 다 되지만, 실질적인 물리 메모리 할당은 INT_32MAX 기준으로 하기 때문에 SIGKILL 또한 발생하지 않는다. 
 
-- **음수/0 방어**: `width`, `height`, `channels`가 0이면 `SIZE_MAX / height`에서 0으로 나누기가 발생하고, 음수는 `(size_t)`로 캐스팅될 때 거대한 값으로 뒤집힌다. 캐스팅·나눗셈 전에 `if (width <= 0 || height <= 0 || channels <= 0)`로 걸러낸다.
+마지막에 출력되는 문구도 아래와 같이 정상적으로 출력된다.
+```
+allocated nbytes(int)=1716100 for 655x655 x4
+```
 
-
+수정된 코드는 아래와 같다. 
+```c
+size_t total=(size_t)width*height*channels;
+    if(total>INT32_MAX){
+        img->nbytes=INT32_MAX;
+    }else{
+        img->nbytes=total;
+    }
+```

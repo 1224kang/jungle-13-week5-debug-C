@@ -18,7 +18,7 @@ static Image *image_new(int width, int height, int channels) {
     img->height = height;
     img->channels = channels;
 
-    printf("max:%zu",SIZE_MAX);
+    // printf("max:%zu",SIZE_MAX);
     
     //오버플로우 검사
     if((size_t)width>SIZE_MAX/(size_t)height){
@@ -26,16 +26,21 @@ static Image *image_new(int width, int height, int channels) {
         exit(1);
     }
 
-    size_t wh=(size_t)width*(size_t)height;
+    // size_t wh=(size_t)width*(size_t)height;
 
-    if(wh>SIZE_MAX/(size_t)channels){
-        fprintf(stderr,"곱셈 오버플로우 발생");
-        exit(1);
-    }
+    // if(wh>SIZE_MAX/(size_t)channels){
+    //     fprintf(stderr,"곱셈 오버플로우 발생");
+    //     exit(1);
+    // }
     
-    img->nbytes=wh*channels;
+    size_t total=(size_t)width*height*channels;
+    if(total>INT32_MAX){
+        img->nbytes=INT32_MAX;
+    }else{
+        img->nbytes=total;
+    }
 
-    img->px = malloc((size_t)img->nbytes);     
+    img->px = malloc(img->nbytes);     
     if (!img->px) { perror("malloc px"); exit(1); }
     return img;
 }
